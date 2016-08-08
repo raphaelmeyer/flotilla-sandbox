@@ -24,7 +24,7 @@ class Robot:
         self._right.stop()
         self._left.stop()
 
-        self._brightness = 20
+        self._brightness = 1
         self._matrix.set_brightness(self._brightness)
 
     def run(self):
