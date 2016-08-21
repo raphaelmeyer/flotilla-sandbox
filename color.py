@@ -1,4 +1,3 @@
-
 import flotilla
 import time
 
@@ -11,18 +10,16 @@ class Colors:
     Yellow = 3
     Orange = 4
     Purple = 5
-    Black = 6
-    White = 7
+    Unknown = 6
 
     name = {
-        Red    : 'Red',
-        Green  : 'Green',
-        Blue   : 'Blue',
-        Yellow : 'Yellow',
-        Orange : 'Orange',
-        Purple : 'Purple',
-        Black  : 'Black',
-        White  : 'White'
+        Red     : 'Red',
+        Green   : 'Green',
+        Blue    : 'Blue',
+        Yellow  : 'Yellow',
+        Orange  : 'Orange',
+        Purple  : 'Purple',
+        Unknown : 'Unknown'
     }
 
 X = [
@@ -87,24 +84,24 @@ X = [
     [0.424,0.302,0.358],
 
     #black
-    [0.378,0.321,0.358],
-    [0.374,0.325,0.362],
-    [0.330,0.287,0.317],
-    [0.393,0.359,0.378],
-    [0.361,0.305,0.339],
-    [0.390,0.326,0.356],
-    [0.383,0.319,0.357],
-    [0.343,0.305,0.341],
+#    [0.378,0.321,0.358],
+#    [0.374,0.325,0.362],
+#    [0.330,0.287,0.317],
+#    [0.393,0.359,0.378],
+#    [0.361,0.305,0.339],
+#    [0.390,0.326,0.356],
+#    [0.383,0.319,0.357],
+#    [0.343,0.305,0.341],
 
     #white
-    [0.399,0.344,0.290],
-    [0.404,0.357,0.289],
-    [0.397,0.352,0.292],
-    [0.403,0.351,0.290],
-    [0.406,0.351,0.292],
-    [0.389,0.349,0.289],
-    [0.381,0.356,0.295],
-    [0.386,0.359,0.295]
+#    [0.399,0.344,0.290],
+#    [0.404,0.357,0.289],
+#    [0.397,0.352,0.292],
+#    [0.403,0.351,0.290],
+#    [0.406,0.351,0.292],
+#    [0.389,0.349,0.289],
+#    [0.381,0.356,0.295],
+#    [0.386,0.359,0.295]
 ]
 
 y = [
@@ -161,74 +158,77 @@ y = [
     Colors.Purple,
     Colors.Purple,
     Colors.Purple,
-
-    Colors.Black,
-    Colors.Black,
-    Colors.Black,
-    Colors.Black,
-    Colors.Black,
-    Colors.Black,
-    Colors.Black,
-    Colors.Black,
-
-    Colors.White,
-    Colors.White,
-    Colors.White,
-    Colors.White,
-    Colors.White,
-    Colors.White,
-    Colors.White,
-    Colors.White,
 ]
 
 class Color:
 
     def __init__(self):
+        self.previous = Colors.Unknown
+        self.count = 0
+
+        self.model = DecisionTreeClassifier()
+
         self.client = flotilla.Client()
 
         while not self.client.ready:
             pass
 
-        self.model = DecisionTreeClassifier()
-        self.model.fit(X, y)
+    def require(self, modules):
+        module_list = []
+        for i, module in enumerate(modules):
+            module_list.append(self.client.first(module))
 
-        self._i = 0
+        for i, module in enumerate(modules):
+            if module_list[i] is None:
+                print('Require a {} module'.format(module))
 
-    def _connect(self):
+        for i, module in enumerate(modules):
+            while module_list[i] is None:
+                module_list[i] = self.client.first(module)
 
-        self.color = self.client.first(flotilla.Colour)
-        #self.rainbow = self.client.first(flotilla.Rainbow)
+        return module_list
 
-        if self.color is None:
-            print('Needs a color module')
-
-        while self.color is None:
-            self.color = self.client.first(flotilla.Colour)
+    def connect(self):
+        (self.color, self.light) = self.require([flotilla.Colour, flotilla.Light])
 
     def run(self):
-        self._connect()
+        self.connect()
         try:
+            self.learn()
+            print('Ready')
             while True:
-                self._loop()
-                time.sleep(0.1)
+                self.loop()
         except KeyboardInterrupt:
             self.client.stop()
 
-    def _loop(self):
+    def learn(self):
+        self.model.fit(X, y)
 
-        c = self.color.clear
+    def loop(self):
+        if self.light.light < 500:
 
-        r = self.color.red / c
-        g = self.color.green / c
-        b = self.color.blue / c
+            c = self.color.clear
 
-        color = self.model.predict([r, g, b])[0]
-        print(color)
-        print('{}'.format(Colors.name[color]))
+            r = self.color.red / c
+            g = self.color.green / c
+            b = self.color.blue / c
 
-        #self.rainbow.set_all(red, green, blue)
-        #self.rainbow.update()
+            color = self.model.predict([[r, g, b]])[0]
+            if color != self.previous:
+                self.count = 0
+                self.previous = color
+            else:
+                if self.count < 10:
+                    self.count = self.count + 1
+                elif self.count == 10 :
+                    self.count = self.count + 1
+                    print(Colors.name[color])
 
+            time.sleep(0.05)
+
+        else:
+            self.previous = Colors.Unknown
+            time.sleep(0.5)
 
 if __name__ == '__main__':
     app = Color()
