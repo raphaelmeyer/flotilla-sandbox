@@ -37,17 +37,17 @@ class Synth:
         self.sine = pyo.Sine()
         self.lfo = pyo.LFO(mul=self.sine).out()
 
-        self.t1 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.5))
-        self.lfo1 = pyo.LFO(mul=self.t1.env, freq=440, type=2).out()
+        self.env1 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.8))
+        self.lfo1 = pyo.LFO(mul=self.env1.env, freq=440, type=4).out()
 
-        self.t2 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.5))
-        self.lfo2 = pyo.LFO(mul=self.t2.env, freq=523, type=3).out()
+        self.env2 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.8))
+        self.lfo2 = pyo.LFO(mul=self.env2.env, freq=523, type=4).out()
 
-        self.t3 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.5))
-        self.lfo3 = pyo.LFO(mul=self.t3.env, freq=659, type=4).out()
+        self.env3 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.8))
+        self.lfo3 = pyo.LFO(mul=self.env3.env, freq=659, type=4).out()
 
-        self.t4 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.5))
-        self.lfo4 = pyo.LFO(mul=self.t4.env, freq=880, type=5).out()
+        self.env4 = Envelope(pyo.Adsr(attack=0.01, decay=0.2, sustain=0.5, release=0.7, mul=0.8))
+        self.lfo4 = pyo.LFO(mul=self.env4.env, freq=880, type=4).out()
 
         self.pat = pyo.Pattern(Synth.metro, time=0.5, arg=self).play()
         self.beat = 0
@@ -88,12 +88,12 @@ class Synth:
                 self.lfo.setMul(self.sine)
             self.lfo.setFreq(f)
 
-        self.eval_touch(self.t1, self.touch.one)
-        self.eval_touch(self.t2, self.touch.two)
-        self.eval_touch(self.t3, self.touch.three)
-        self.eval_touch(self.t4, self.touch.four)
+        self.eval_touch(self.env1, self.touch.one)
+        self.eval_touch(self.env2, self.touch.two)
+        self.eval_touch(self.env3, self.touch.three)
+        self.eval_touch(self.env4, self.touch.four)
 
-    def eval_touch(self, env, touch, name):
+    def eval_touch(self, env, touch):
         if touch:
             if not env.playing:
                 env.env.play()
